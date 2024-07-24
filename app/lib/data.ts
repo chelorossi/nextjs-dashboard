@@ -19,7 +19,6 @@ export async function fetchRevenue() {
     await new Promise((resolve) => setTimeout(resolve, 3000));
 
     const data = await prisma.revenue.findMany();
-    console.log(data);
     console.log("Data fetch completed after 3 seconds.");
 
     return data;
@@ -148,11 +147,11 @@ export async function fetchFilteredInvoices(
           //     contains: query,
           //   },
           // },
-          {
-            status: {
-              contains: query,
-            },
-          },
+          // {
+          //   status: {
+          //     equals: query,
+          //   },
+          // },
         ],
       },
       orderBy: {
@@ -188,11 +187,11 @@ export async function fetchInvoicesPages(query: string) {
               },
             },
           },
-          {
-            status: {
-              contains: query,
-            },
-          },
+          // {
+          //   status: {
+          //     contains: query,
+          //   },
+          // },
         ],
       },
     });
@@ -207,13 +206,15 @@ export async function fetchInvoicesPages(query: string) {
 
 export async function fetchInvoiceById(id: string) {
   try {
+    const invoiceFields = {
+      id: true,
+      customer_id: true,
+      amount: true,
+      status: true,
+    };
+
     const invoice = await prisma.invoice.findFirstOrThrow({
-      select: {
-        id: true,
-        customer_id: true,
-        amount: true,
-        status: true,
-      },
+      select: invoiceFields,
       where: {
         id: id,
       },
@@ -229,6 +230,45 @@ export async function fetchInvoiceById(id: string) {
   }
 }
 
+export async function fetchCustomerById(id: string) {
+  try {
+    const customer = await prisma.customer.findFirstOrThrow({
+      where: {
+        id: id,
+      },
+      include: {
+        invoices: {
+          select: {
+            id: true,
+            amount: true,
+            status: true,
+          },
+        },
+      },
+    });
+
+    const total_invoices = customer.invoices.length;
+    const total_pending = customer.invoices
+      .filter((invoice) => invoice.status === "pending")
+      .reduce((total, invoice) => total + invoice.amount, 0);
+    const total_paid = customer.invoices
+      .filter((invoice) => invoice.status === "paid")
+      .reduce((total, invoice) => total + invoice.amount, 0);
+
+    const formattedCustomer = {
+      ...customer,
+      total_invoices,
+      total_pending: formatCurrency(total_pending),
+      total_paid: formatCurrency(total_paid),
+    };
+
+    return formattedCustomer;
+  } catch (error) {
+    console.error("Database Error:", error);
+    throw new Error("Failed to fetch customer.");
+  }
+}
+
 export async function fetchCustomers() {
   try {
     const customers = prisma.customer.findMany();
@@ -239,7 +279,40 @@ export async function fetchCustomers() {
   }
 }
 
-export async function fetchFilteredCustomers(query: string) {
+export async function fetchCustomersPages(query: string) {
+  try {
+    const count = await prisma.customer.count({
+      where: {
+        OR: [
+          {
+            name: {
+              contains: query,
+            },
+          },
+          {
+            email: {
+              contains: query,
+            },
+          },
+        ],
+      },
+    });
+
+    const totalPages = Math.ceil(Number(count) / ITEMS_PER_PAGE);
+    return totalPages;
+  } catch (error) {
+    console.error("Database Error:", error);
+    throw new Error("Failed to fetch total number of customers.");
+  }
+}
+
+export async function fetchFilteredCustomers(
+  query: string,
+  currentPage: number
+) {
+  const offset = (currentPage - 1) * ITEMS_PER_PAGE;
+  console.log("fetching customers");
+
   try {
     const customers = await prisma.customer.findMany({
       select: {
@@ -282,6 +355,8 @@ export async function fetchFilteredCustomers(query: string) {
       orderBy: {
         name: "asc",
       },
+      skip: offset,
+      take: ITEMS_PER_PAGE,
     });
 
     const formattedCustomers = customers.map((customer) => {

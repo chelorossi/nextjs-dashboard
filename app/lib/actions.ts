@@ -48,6 +48,19 @@ const FormSchema = z.object({
   date: z.string(),
 });
 
+const FormSchemaCustomer = z.object({
+  id: z.string(),
+  name: z.string({
+    invalid_type_error: "Please enter a name.",
+  }),
+  email: z.string({
+    invalid_type_error: "Please enter an email.",
+  }),
+  image_url: z.string({
+    invalid_type_error: "Please enter an image URL.",
+  }),
+});
+
 const CreateInvoice = FormSchema.omit({ id: true, date: true });
 
 export type State = {
@@ -58,6 +71,17 @@ export type State = {
   };
   message?: string | null;
 };
+
+export type StateCustomer = {
+  errors?: {
+    name?: string[];
+    email?: string[];
+    image_url?: string[];
+  };
+  message?: string | null;
+};
+
+const CreateCustomer = FormSchemaCustomer.omit({ id: true });
 
 export async function createInvoice(prevState: State, formData: FormData) {
   const validatedFields = CreateInvoice.safeParse({
@@ -94,6 +118,43 @@ export async function createInvoice(prevState: State, formData: FormData) {
   }
 
   redirect("/dashboard/invoices");
+}
+
+export async function createCustomer(
+  prevState: StateCustomer,
+  formData: FormData
+) {
+  const validatedFields = CreateCustomer.safeParse({
+    name: formData.get("name"),
+    email: formData.get("email"),
+    image_url: formData.get("image_url") || "no_image.jpg",
+  });
+
+  if (!validatedFields.success) {
+    return {
+      errors: validatedFields.error.flatten().fieldErrors,
+      message: "Missing Fields. Failed to Create Customer.",
+    };
+  }
+
+  const { name, email, image_url } = validatedFields.data;
+
+  try {
+    await prisma.customer.create({
+      data: {
+        name,
+        email,
+        image_url,
+      },
+    });
+    revalidatePath("/dashboard/customers");
+  } catch (error) {
+    return {
+      message: "Database Error: Failed to Create Customer.",
+    };
+  }
+
+  redirect("/dashboard/customers");
 }
 
 // Use Zod to update the expected types
@@ -136,6 +197,47 @@ export async function updateInvoice(
   redirect("/dashboard/invoices");
 }
 
+const UpdateCustomer = FormSchemaCustomer.omit({ id: true });
+
+export async function updateCustomer(
+  id: string,
+  prevState: StateCustomer,
+  formData: FormData
+) {
+  const validatedFields = UpdateCustomer.safeParse({
+    name: formData.get("name"),
+    email: formData.get("email"),
+    image_url: formData.get("image_url") || "no_image.jpg",
+  });
+
+  if (!validatedFields.success) {
+    return {
+      errors: validatedFields.error.flatten().fieldErrors,
+      message: "Missing Fields. Failed to Update Customer.",
+    };
+  }
+
+  const { name, email, image_url } = validatedFields.data;
+
+  try {
+    await prisma.customer.update({
+      where: { id },
+      data: {
+        name,
+        email,
+        image_url,
+      },
+    });
+    revalidatePath("/dashboard/customers");
+  } catch (error) {
+    return {
+      message: "Database Error: Failed to Update Customer.",
+    };
+  }
+
+  redirect("/dashboard/customers");
+}
+
 export async function deleteInvoice(id: string) {
   try {
     await prisma.invoice.delete({
@@ -144,5 +246,16 @@ export async function deleteInvoice(id: string) {
     revalidatePath("/dashboard/invoices");
   } catch (error) {
     return { message: "Database Error: Failed to Delete Invoice." };
+  }
+}
+
+export async function deleteCustomer(id: string) {
+  try {
+    await prisma.customer.delete({
+      where: { id },
+    });
+    revalidatePath("/dashboard/customers");
+  } catch (error) {
+    return { message: "Database Error: Failed to Delete Customer." };
   }
 }

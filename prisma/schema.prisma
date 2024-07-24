@@ -8,27 +8,30 @@ datasource db {
 }
 
 model Customer {
-  id        String @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
-  name      String @db.VarChar(255)
-  email     String @db.VarChar(255) @unique
-  image_url String @db.VarChar(255)
+  id        String    @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  name      String    @db.VarChar(255)
+  email     String    @unique @db.VarChar(255)
+  image_url String    @db.VarChar(255)
   invoices  Invoice[]
+
   @@map("customers")
 }
 
 model Invoice {
   id          String   @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
   customer_id String   @db.Uuid
-  customer    Customer @relation(fields: [customer_id], references: [id], onDelete: Cascade)
   amount      Int
-  status      String   @db.VarChar(255) @default("pending")
-  date        DateTime @db.Date @default(now())
+  date        DateTime @default(now()) @db.Date
+  status      Status   @default(pending)
+  customer    Customer @relation(fields: [customer_id], references: [id], onDelete: Cascade)
+
   @@map("invoices")
 }
 
 model Revenue {
   month   String @unique @db.VarChar(4)
   revenue Int
+
   @@map("revenue")
 }
 
@@ -37,5 +40,11 @@ model User {
   name     String @db.VarChar(255)
   email    String @unique
   password String
+
   @@map("users")
+}
+
+enum Status {
+  pending
+  paid
 }

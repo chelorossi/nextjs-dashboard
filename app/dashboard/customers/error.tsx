@@ -24,7 +24,7 @@ export default function Error({
           () => reset()
         }
       >
-        Try again to work with invoices
+        Try again to work with the customers
       </button>
     </main>
   );

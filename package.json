@@ -5,7 +5,7 @@
     "dev": "next dev",
     "start": "next start",
     "lint": "next lint",
-    "postinstall": "dotenv -e .env.local -- prisma generate",
+    // "postinstall": "dotenv -e .env.local -- prisma generate",
     "db:studio": "dotenv -e .env.local -- prisma studio",
     "db:generate": "dotenv -e .env.local -- prisma generate",
     "db:migrate": "dotenv -e .env.local -- prisma migrate dev",

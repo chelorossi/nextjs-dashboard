@@ -11,11 +11,17 @@
     "db:migrate": "dotenv -e .env.local -- prisma migrate dev",
     "db:push": "dotenv -e .env.local -- prisma db push",
     "db:reset": "dotenv -e .env.local -- prisma migrate reset",
-    "db:seed": "dotenv -e .env.local -- prisma db seed --preview-feature"
+    "db:seed": "dotenv -e .env.local -- prisma db seed --preview-feature",
+    "db:studio:prod": "dotenv -e .env.production.local -- prisma studio",
+    "db:push:prod": "dotenv -e .env.production.local -- prisma db push",
+    "db:generate:prod": "dotenv -e .env.production.local -- prisma generate"
   },
   "dependencies": {
+    "@aws-sdk/client-s3": "^3.620.0",
+    "@aws-sdk/lib-storage": "^3.620.0",
     "@heroicons/react": "^2.1.4",
     "@prisma/client": "5.17.0",
+    "@t3-oss/env-nextjs": "^0.11.0",
     "@tailwindcss/forms": "^0.5.7",
     "@vercel/postgres": "^0.8.0",
     "autoprefixer": "10.4.19",
@@ -31,6 +37,7 @@
     "tailwindcss": "3.4.4",
     "typescript": "5.5.2",
     "use-debounce": "^10.0.1",
+    "uuid": "^10.0.0",
     "zod": "^3.23.8"
   },
   "devDependencies": {
@@ -38,9 +45,11 @@
     "@types/node": "20.14.8",
     "@types/react": "18.3.3",
     "@types/react-dom": "18.3.0",
+    "@types/uuid": "^10.0.0",
     "dotenv": "^16.4.5",
     "eslint": "^8",
     "eslint-config-next": "14.2.5",
+    "eslint-config-prettier": "^9.1.0",
     "prisma": "^5.17.0"
   },
   "engines": {

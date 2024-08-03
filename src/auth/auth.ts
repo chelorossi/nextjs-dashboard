@@ -1,20 +1,9 @@
-import bcrypt from "bcrypt";
-import NextAuth from "next-auth";
-import Credentials from "next-auth/providers/credentials";
-import { z } from "zod";
 import { authConfig } from "@/auth/auth.config";
 import prisma from "@/lib/db";
-import type { NextApiRequest } from "next";
-import getServerSession, { Session } from "next-auth";
-// import { authOptions } from "@/app/api/auth/[...nextauth]/auth-options";
-
-// export default async function checkSession(): Promise<Session> {
-//   const session = await getServerSession(authOptions);
-//   if (!session?.user.user_id) {
-//     throw new Error("{ statusCode: 401, message: Unauthorized }");
-//   }
-//   return session;
-// }
+import bcrypt from "bcrypt";
+import NextAuth, { Session } from "next-auth";
+import Credentials from "next-auth/providers/credentials";
+import { z } from "zod";
 
 async function getUser(email: string) {
   try {

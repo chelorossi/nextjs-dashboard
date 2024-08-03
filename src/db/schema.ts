@@ -24,9 +24,11 @@ export const FormSchemaCustomer = z.object({
   name: z.string({
     invalid_type_error: "Please enter a name.",
   }),
-  email: z.string({
-    invalid_type_error: "Please enter an email.",
-  }),
+  email: z
+    .string({
+      invalid_type_error: "Please enter an email.",
+    })
+    .email("Please enter a valid email."),
   image_url: z.string({
     invalid_type_error: "Please enter an image URL.",
   }),

@@ -204,7 +204,11 @@ export async function updateCustomer(
     };
   }
 
-  redirect("/dashboard/customers");
+  return {
+    message: "Customer Updated Successfully.",
+  };
+
+  // redirect("/dashboard/customers");
 }
 
 export async function updateCustomerImage(customerId: string, imageId: string) {

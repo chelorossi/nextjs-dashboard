@@ -8,6 +8,7 @@ const allowedMimeTypes = [
   "image/jpeg",
   "image/png",
   "image/gif",
+  "image/*",
   "application/pdf",
   "text/plain",
   "video/mp4",
@@ -27,10 +28,14 @@ export async function uploadFilesAction(
   prevState: any,
   formData: { getAll: (arg0: string) => any }
 ) {
+  const files = formData.getAll("files");
+
+  if (!files || files.length === 0) {
+    return { ...prevState, success: false, message: "No files to upload" };
+  }
+
+  const filesUploaded = [];
   try {
-    const files = formData.getAll("file");
-    const filesUploaded = [];
-    console.log("files", files);
     for (const file of files) {
       const buffer = Buffer.from(await file.arrayBuffer());
       const { fileName, fileSize } = await uploadFileToS3(
@@ -40,14 +45,15 @@ export async function uploadFilesAction(
       );
       filesUploaded.push({ fileName, fileSize });
     }
+    console.log("files", files);
     revalidatePath("/dashboard/profile");
     return {
+      success: true,
       message: "Files uploaded successfully",
       filesUploaded: filesUploaded,
     };
   } catch (error) {
-    console.error("Error uploading files:", error);
-    return { ...prevState, message: "Failed to upload files" };
+    return { ...prevState, success: false, message: "Failed to upload files" };
   }
 }
 
@@ -65,10 +71,11 @@ export async function uploadFileToS3(
       Body: file,
       ContentType: mimetype,
     });
+    const response = await client.send(command);
 
-    console.error("Added file:", { fileName, fileSize: file.length });
-    const fileSize = file.length; // Calculate file size in MB with 2 decimals
+    console.log("Added file:", { fileName, fileSize: file.length });
 
+    const fileSize = file.length;
     return { fileName, fileSize };
   } catch (err) {
     console.error("S3 upload error:", err);
@@ -77,13 +84,12 @@ export async function uploadFileToS3(
 }
 
 function validateFile(file: Buffer, fileName: string, mimetype: string) {
-  if (!allowedMimeTypes.includes(mimetype)) {
-    throw new Error(`Unsupported file type: ${mimetype}`);
-  }
-
   if (file.length === 0) {
     throw new Error("File is empty");
   }
+  // if (!allowedMimeTypes.includes(mimetype)) {
+  //   throw new Error(`Unsupported file type: ${mimetype}`);
+  // }
 
   if (fileName.length === 0) {
     throw new Error("File name is empty");
